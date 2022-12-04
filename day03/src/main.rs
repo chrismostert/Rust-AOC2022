@@ -1,44 +1,36 @@
-use std::collections::HashSet;
+use itertools::Itertools;
 
-fn priority(c: &char) -> usize {
-    if c.is_lowercase() {
-        *c as usize - 'a' as usize + 1
-    } else {
-        *c as usize - 'A' as usize + 27
+fn priority(c: &u8) -> usize {
+    match c {
+        b'a'..=b'z' => (c - b'a' + 1).into(),
+        b'A'..=b'Z' => (c - b'A' + 27).into(),
+        _ => unreachable!(),
     }
 }
 
+fn matching_chars(a: &[u8], b: &[u8]) -> Vec<u8> {
+    a.iter().copied().filter(|c| b.contains(c)).collect()
+}
+
 fn main() {
-    let input = include_str!("../input.txt");
-
-    let sacks: Vec<(HashSet<char>, HashSet<char>)> = input
+    let input: Vec<_> = include_str!("../input.txt")
         .lines()
-        .map(|line| {
-            let (lhs, rhs) = line.split_at(line.len() / 2);
-            (lhs.chars().collect(), rhs.chars().collect())
-        })
+        .map(|line| line.as_bytes())
         .collect();
 
-    let isx: Vec<&char> = sacks
+    let p1: usize = input
         .iter()
-        .map(|(lhs, rhs)| lhs.intersection(rhs).next().unwrap())
-        .collect();
-
-    println!(
-        "Part 1: {}",
-        isx.iter().map(|&c| priority(c)).sum::<usize>()
-    );
-
-    let p2: Vec<HashSet<char>> = input.lines().map(|line| line.chars().collect()).collect();
-
-    let p2_sol: usize = p2
-        .chunks_exact(3)
-        .map(|chunk| {
-            let ab: HashSet<char> = chunk[0].intersection(&chunk[1]).copied().collect();
-            let abc: Vec<&char> = ab.intersection(&chunk[2]).collect();
-            priority(abc[0])
-        })
+        .map(|sack| matching_chars(&sack[..sack.len() / 2], &sack[sack.len() / 2..]))
+        .map(|overlap| priority(&overlap[0]))
         .sum();
 
-    dbg!(p2_sol);
+    let p2: usize = input
+        .iter()
+        .tuples()
+        .map(|(a, b, c)| matching_chars(a, &matching_chars(b, c)))
+        .map(|overlap| priority(&overlap[0]))
+        .sum();
+
+    println!("Part 1: {p1}");
+    println!("Part 2: {p2}");
 }
