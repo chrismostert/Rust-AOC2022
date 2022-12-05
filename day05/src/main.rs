@@ -11,10 +11,10 @@ impl TowerPuzzle {
 
         for layer in layers {
             let chars: Vec<char> = layer.chars().collect();
-            for tower_no in 0..n_towers {
-                let idx = 1 + tower_no * 4;
+            for (tower_idx, tower) in towers.iter_mut().enumerate() {
+                let idx = 1 + tower_idx * 4;
                 if chars[idx] != ' ' {
-                    towers[tower_no].push(chars[1 + tower_no * 4])
+                    tower.push(chars[idx])
                 };
             }
         }
@@ -55,11 +55,11 @@ fn main() {
         let amount = parts.nth(1).unwrap().parse().unwrap();
         let from_idx = parts.nth(1).unwrap().parse().unwrap();
         let to_idx = parts.nth(1).unwrap().parse().unwrap();
-        
+
         towers.move_blocks(amount, from_idx, to_idx);
         towers_p2.move_many_blocks(amount, from_idx, to_idx);
     }
-    
+
     print!("Part 1: ");
     towers.print_top();
 
