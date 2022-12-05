@@ -1,10 +1,11 @@
+use std::fmt;
 #[derive(Clone)]
 struct TowerPuzzle {
     towers: Vec<Vec<char>>,
 }
 
-impl TowerPuzzle {
-    fn create_from(blueprint: &str) -> Self {
+impl From<&str> for TowerPuzzle {
+    fn from(blueprint: &str) -> Self {
         let mut layers = blueprint.lines().rev();
         let n_towers = layers.next().unwrap().split("  ").count();
         let mut towers = vec![Vec::new(); n_towers];
@@ -21,7 +22,20 @@ impl TowerPuzzle {
 
         TowerPuzzle { towers }
     }
+}
 
+impl fmt::Display for TowerPuzzle {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let top: String = self
+            .towers
+            .iter()
+            .map(|tower| tower.last().unwrap())
+            .collect();
+        write!(f, "{top}")
+    }
+}
+
+impl TowerPuzzle {
     fn move_blocks(&mut self, amount: usize, from_idx: usize, to_idx: usize) {
         for _ in 0..amount {
             let elem = self.towers[from_idx - 1].pop().unwrap();
@@ -36,33 +50,28 @@ impl TowerPuzzle {
             .collect();
         self.towers[to_idx - 1].extend(elems);
     }
-
-    fn print_top(self) {
-        for tower in &self.towers {
-            print!("{}", tower.last().unwrap());
-        }
-        println!();
-    }
 }
 
 fn main() {
     let (blueprint, instructions) = include_str!("../input.txt").split_once("\n\n").unwrap();
-    let mut towers = TowerPuzzle::create_from(blueprint);
+    let mut towers = TowerPuzzle::from(blueprint);
     let mut towers_p2 = towers.clone();
 
-    for line in instructions.lines() {
-        let mut parts = line.split(' ');
-        let amount = parts.nth(1).unwrap().parse().unwrap();
-        let from_idx = parts.nth(1).unwrap().parse().unwrap();
-        let to_idx = parts.nth(1).unwrap().parse().unwrap();
+    instructions
+        .lines()
+        .map(|line| {
+            let mut parts = line.split(' ');
+            (
+                parts.nth(1).unwrap().parse().unwrap(),
+                parts.nth(1).unwrap().parse().unwrap(),
+                parts.nth(1).unwrap().parse().unwrap(),
+            )
+        })
+        .for_each(|(amount, from_idx, to_idx)| {
+            towers.move_blocks(amount, from_idx, to_idx);
+            towers_p2.move_many_blocks(amount, from_idx, to_idx);
+        });
 
-        towers.move_blocks(amount, from_idx, to_idx);
-        towers_p2.move_many_blocks(amount, from_idx, to_idx);
-    }
-
-    print!("Part 1: ");
-    towers.print_top();
-
-    print!("Part 2: ");
-    towers_p2.print_top();
+    println!("Part 1: {}", towers);
+    println!("Part 2: {}", towers_p2);
 }
