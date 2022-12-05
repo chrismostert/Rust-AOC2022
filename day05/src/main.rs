@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fmt;
 #[derive(Clone)]
 struct TowerPuzzle {
@@ -62,14 +63,8 @@ fn main() {
 
     instructions
         .lines()
-        .map(|line| {
-            let mut parts = line.split(' ');
-            (
-                parts.nth(1).unwrap().parse().unwrap(),
-                parts.nth(1).unwrap().parse().unwrap(),
-                parts.nth(1).unwrap().parse().unwrap(),
-            )
-        })
+        .map(|line| line.split_whitespace().next_tuple().unwrap())
+        .map(|(_, a, _, b, _, c)| (a.parse().unwrap(), b.parse().unwrap(), c.parse().unwrap()))
         .for_each(|(amount, from_idx, to_idx)| {
             towers.move_blocks(amount, from_idx, to_idx);
             towers_p2.move_many_blocks(amount, from_idx, to_idx);
