@@ -10,15 +10,18 @@ impl From<&str> for TowerPuzzle {
         let n_towers = layers.next().unwrap().split("  ").count();
         let mut towers = vec![Vec::new(); n_towers];
 
-        for layer in layers {
+        layers.for_each(|layer| {
             let chars: Vec<char> = layer.chars().collect();
-            for (tower_idx, tower) in towers.iter_mut().enumerate() {
-                let idx = 1 + tower_idx * 4;
-                if chars[idx] != ' ' {
-                    tower.push(chars[idx])
-                };
-            }
-        }
+            towers
+                .iter_mut()
+                .enumerate()
+                .for_each(|(tower_idx, tower)| {
+                    let idx = 1 + tower_idx * 4;
+                    if chars[idx] != ' ' {
+                        tower.push(chars[idx])
+                    };
+                })
+        });
 
         TowerPuzzle { towers }
     }
