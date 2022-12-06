@@ -4,8 +4,7 @@ fn find_packet_index(input: &str, size: usize) -> usize {
     input
         .as_bytes()
         .windows(size)
-        .enumerate()
-        .find(|(_, bytes)| bytes.iter().unique().count() == size)
+        .find_position(|chars| chars.iter().all_unique())
         .unwrap()
         .0
         + size
