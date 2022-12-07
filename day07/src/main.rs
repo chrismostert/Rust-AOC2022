@@ -1,35 +1,33 @@
 use std::collections::HashMap;
-#[derive(Debug)]
 enum Command {
     DirectoryUp,
     Directory(&'static str),
     File(usize),
-    None,
 }
 
 fn parse_input(input: &'static str) -> Vec<Command> {
     input
         .lines()
-        .map(|line| {
+        .filter_map(|line| {
             let mut parts = line.split_whitespace();
             match (parts.next(), parts.next()) {
                 (Some("$"), Some("cd")) => {
                     if let Some(dirname) = parts.next() {
                         if dirname == ".." {
-                            return Command::DirectoryUp;
+                            return Some(Command::DirectoryUp);
                         } else {
-                            return Command::Directory(dirname);
+                            return Some(Command::Directory(dirname));
                         }
                     }
-                    Command::None
+                    None
                 }
                 (Some(maybe_num), _) => {
                     if let Ok(num) = maybe_num.parse() {
-                        return Command::File(num);
+                        return Some(Command::File(num));
                     }
-                    Command::None
+                    None
                 }
-                _ => Command::None,
+                _ => None,
             }
         })
         .collect()
@@ -53,7 +51,6 @@ fn find_sizes(commands: &[Command]) -> HashMap<Vec<&str>, usize> {
                         *sizes.entry(subpath).or_insert(0) += size;
                     });
             }
-            _ => {}
         }
         sizes
     })
