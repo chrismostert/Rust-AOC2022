@@ -8,22 +8,22 @@ fn find_sizes(input: &str) -> HashMap<Vec<&str>, usize> {
         match (parts.next(), parts.next(), parts.next()) {
             (Some("$"), Some("cd"), Some("..")) => {
                 path.pop();
+                sizes
             }
             (Some("$"), Some("cd"), Some(dir)) => {
                 path.push(dir);
+                sizes
             }
-            (Some("$"), _, _) => return sizes,
-            (Some("dir"), _, _) => return sizes,
+            (Some("$"), _, _) => sizes,
+            (Some("dir"), _, _) => sizes,
             (Some(size), _, _) => {
-                (0..path.len())
-                    .map(|i| path[0..=i].to_vec())
-                    .for_each(|subpath| {
-                        *sizes.entry(subpath).or_insert(0) += size.parse::<usize>().unwrap();
-                    });
+                for subpath in (0..path.len()).map(|i| path[0..=i].to_vec()) {
+                    *sizes.entry(subpath).or_insert(0) += size.parse::<usize>().unwrap();
+                }
+                sizes
             }
-            _ => return sizes,
-        };
-        sizes
+            _ => sizes,
+        }
     })
 }
 
