@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 fn simulate_rope(input: &str, rope_length: usize) -> (usize, usize) {
-    let mut rope = vec![(0, 0); rope_length];
+    let mut rope: Vec<(isize, isize)> = vec![(0, 0); rope_length];
 
     let mut visited_second: HashSet<(isize, isize)> = HashSet::new();
     let mut visited_tail: HashSet<(isize, isize)> = HashSet::new();
@@ -20,29 +20,10 @@ fn simulate_rope(input: &str, rope_length: usize) -> (usize, usize) {
             }
 
             for i in 1..rope.len() {
-                // Update tail
-                match (rope[i - 1].0 - rope[i].0, rope[i - 1].1 - rope[i].1) {
-                    (0, 2) => rope[i].1 += 1,
-                    (0, -2) => rope[i].1 -= 1,
-                    (-2, 0) => rope[i].0 -= 1,
-                    (2, 0) => rope[i].0 += 1,
-                    (1, 2) | (2, 1) | (2, 2) => {
-                        rope[i].0 += 1;
-                        rope[i].1 += 1
-                    }
-                    (1, -2) | (2, -1) | (2, -2) => {
-                        rope[i].0 += 1;
-                        rope[i].1 -= 1;
-                    }
-                    (-1, -2) | (-2, -1) | (-2, -2) => {
-                        rope[i].0 -= 1;
-                        rope[i].1 -= 1;
-                    }
-                    (-1, 2) | (-2, 1) | (-2, 2) => {
-                        rope[i].0 -= 1;
-                        rope[i].1 += 1;
-                    }
-                    _ => {}
+                if (rope[i - 1].0 - rope[i].0).abs() == 2 || (rope[i - 1].1 - rope[i].1).abs() == 2
+                {
+                    rope[i].0 += (rope[i - 1].0 - rope[i].0).signum();
+                    rope[i].1 += (rope[i - 1].1 - rope[i].1).signum();
                 }
             }
 
