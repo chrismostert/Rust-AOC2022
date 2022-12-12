@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    iter,
-};
+use std::collections::{HashMap, HashSet};
 type Coord = (usize, usize);
 
 fn parse_input(input: &str) -> (HashMap<Coord, usize>, Coord, Coord) {
@@ -43,9 +40,9 @@ fn unvisited_neighbors(
     .collect()
 }
 
-fn n_steps(grid: &HashMap<Coord, usize>, start: Coord, end: Option<Coord>) -> Option<usize> {
-    let mut frontier: HashSet<Coord> = HashSet::from_iter(iter::once(start));
-    let mut visited: HashSet<Coord> = HashSet::from_iter(iter::once(start));
+fn n_steps(grid: &HashMap<Coord, usize>, start: Vec<Coord>, end: Coord) -> Option<usize> {
+    let mut frontier: HashSet<Coord> = start.iter().cloned().collect();
+    let mut visited: HashSet<Coord> = start.iter().cloned().collect();
     let mut stepcost = 0;
 
     while !frontier.is_empty() {
@@ -53,25 +50,12 @@ fn n_steps(grid: &HashMap<Coord, usize>, start: Coord, end: Option<Coord>) -> Op
 
         for coord_from in frontier.drain().collect::<Vec<_>>() {
             for coord_to in unvisited_neighbors(grid, coord_from, &visited) {
-                match end {
-                    Some(end_coord) => {
-                        if grid[&coord_to] <= grid[&coord_from] + 1 {
-                            if coord_to == end_coord {
-                                return Some(stepcost);
-                            }
-                            visited.insert(coord_to);
-                            frontier.insert(coord_to);
-                        }
+                if grid[&coord_to] <= grid[&coord_from] + 1 {
+                    if coord_to == end {
+                        return Some(stepcost);
                     }
-                    None => {
-                        if grid[&coord_to] >= grid[&coord_from] - 1 {
-                            if grid[&coord_to] == 1 {
-                                return Some(stepcost);
-                            }
-                            visited.insert(coord_to);
-                            frontier.insert(coord_to);
-                        }
-                    }
+                    visited.insert(coord_to);
+                    frontier.insert(coord_to);
                 }
             }
         }
@@ -83,8 +67,15 @@ fn main() {
     let input = include_str!("../input.txt");
     let (grid, start, end) = parse_input(input);
 
-    let p1 = n_steps(&grid, start, Some(end));
-    let p2 = n_steps(&grid, end, None);
+    let p1 = n_steps(&grid, vec![start], end);
+    let p2 = n_steps(
+        &grid,
+        grid.iter()
+            .filter(|(_, &val)| val == 1)
+            .map(|(&coord, _)| coord)
+            .collect(),
+        end,
+    );
 
     println!("Part 1: {}", p1.unwrap());
     println!("Part 2: {}", p2.unwrap());
