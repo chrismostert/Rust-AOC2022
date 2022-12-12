@@ -27,11 +27,15 @@ fn parse_input(input: &str) -> (HashMap<Coord, usize>, Coord, Coord) {
     )
 }
 
-fn n_steps(grid: &HashMap<Coord, usize>, start: Coord, end: Coord) -> usize {
-
+fn n_steps(grid: &HashMap<Coord, usize>, start: Coord, end: Option<Coord>) -> Option<usize> {
     let mut frontier: HashSet<Coord> = HashSet::from_iter(iter::once(start));
     let mut visited: HashSet<Coord> = HashSet::from_iter(iter::once(start));
     let mut stepcost = 0;
+    let mut end_coord = (0, 0);
+
+    if let Some(v) = end {
+        end_coord = v;
+    }
 
     let neighs = |(x, y): (usize, usize)| {
         vec![
@@ -42,29 +46,37 @@ fn n_steps(grid: &HashMap<Coord, usize>, start: Coord, end: Coord) -> usize {
         ]
     };
 
-    while !(frontier.contains(&end)) {
+    while !frontier.is_empty() {
         stepcost += 1;
 
-        for coord in frontier.drain().collect::<Vec<_>>() {
-            for coord_neigh in neighs(coord) {
-                if !visited.contains(&coord_neigh)
-                    && grid.get(&coord_neigh).is_some()
-                    && grid[&coord_neigh] <= grid[&coord] + 1
+        for coord_from in frontier.drain().collect::<Vec<_>>() {
+            for coord_to in neighs(coord_from) {
+                if !visited.contains(&coord_to)
+                    && grid.get(&coord_to).is_some()
+                    && ((end.is_some() && grid[&coord_to] <= grid[&coord_from] + 1)
+                        || (end.is_none() && grid[&coord_to] >= grid[&coord_from] - 1))
                 {
-                    visited.insert(coord_neigh);
-                    frontier.insert(coord_neigh);
+                    if (end.is_some() && coord_to == end_coord)
+                        || (end.is_none() && grid[&coord_to] == 1)
+                    {
+                        return Some(stepcost);
+                    }
+                    visited.insert(coord_to);
+                    frontier.insert(coord_to);
                 }
             }
         }
     }
-
-    stepcost
+    None
 }
 
 fn main() {
     let input = include_str!("../input.txt");
     let (grid, start, end) = parse_input(input);
 
-    let p1 = n_steps(&grid, start, end);
-    dbg!(p1);
+    let p1 = n_steps(&grid, start, Some(end));
+    let p2 = n_steps(&grid, end, None);
+
+    println!("Part 1: {}", p1.unwrap());
+    println!("Part 2: {}", p2.unwrap());
 }
