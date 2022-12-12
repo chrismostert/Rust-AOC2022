@@ -27,42 +27,51 @@ fn parse_input(input: &str) -> (HashMap<Coord, usize>, Coord, Coord) {
     )
 }
 
+fn unvisited_neighbors(
+    grid: &HashMap<Coord, usize>,
+    (x, y): Coord,
+    visited: &HashSet<Coord>,
+) -> Vec<Coord> {
+    vec![
+        (x.saturating_sub(1), y),
+        (x + 1, y),
+        (x, y.saturating_sub(1)),
+        (x, y + 1),
+    ]
+    .into_iter()
+    .filter(|coord| grid.get(coord).is_some() && !visited.contains(coord))
+    .collect()
+}
+
 fn n_steps(grid: &HashMap<Coord, usize>, start: Coord, end: Option<Coord>) -> Option<usize> {
     let mut frontier: HashSet<Coord> = HashSet::from_iter(iter::once(start));
     let mut visited: HashSet<Coord> = HashSet::from_iter(iter::once(start));
     let mut stepcost = 0;
-    let mut end_coord = (0, 0);
-
-    if let Some(v) = end {
-        end_coord = v;
-    }
-
-    let neighs = |(x, y): (usize, usize)| {
-        vec![
-            (x.saturating_sub(1), y),
-            (x + 1, y),
-            (x, y.saturating_sub(1)),
-            (x, y + 1),
-        ]
-    };
 
     while !frontier.is_empty() {
         stepcost += 1;
 
         for coord_from in frontier.drain().collect::<Vec<_>>() {
-            for coord_to in neighs(coord_from) {
-                if !visited.contains(&coord_to)
-                    && grid.get(&coord_to).is_some()
-                    && ((end.is_some() && grid[&coord_to] <= grid[&coord_from] + 1)
-                        || (end.is_none() && grid[&coord_to] >= grid[&coord_from] - 1))
-                {
-                    if (end.is_some() && coord_to == end_coord)
-                        || (end.is_none() && grid[&coord_to] == 1)
-                    {
-                        return Some(stepcost);
+            for coord_to in unvisited_neighbors(grid, coord_from, &visited) {
+                match end {
+                    Some(end_coord) => {
+                        if grid[&coord_to] <= grid[&coord_from] + 1 {
+                            if coord_to == end_coord {
+                                return Some(stepcost);
+                            }
+                            visited.insert(coord_to);
+                            frontier.insert(coord_to);
+                        }
                     }
-                    visited.insert(coord_to);
-                    frontier.insert(coord_to);
+                    None => {
+                        if grid[&coord_to] >= grid[&coord_from] - 1 {
+                            if grid[&coord_to] == 1 {
+                                return Some(stepcost);
+                            }
+                            visited.insert(coord_to);
+                            frontier.insert(coord_to);
+                        }
+                    }
                 }
             }
         }
