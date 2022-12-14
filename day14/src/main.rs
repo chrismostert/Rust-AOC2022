@@ -1,15 +1,8 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::{cmp::Ordering, collections::HashSet};
+type Coord = (isize, isize);
 
-#[derive(Debug, Clone)]
-enum Material {
-    Rock,
-    Sand,
-}
-
-type Cave = HashMap<(isize, isize), Material>;
-
-fn make_cave(input: &str) -> (Cave, isize) {
-    let mut cave: Cave = HashMap::new();
+fn make_cave(input: &str) -> (HashSet<Coord>, isize) {
+    let mut cave = HashSet::new();
     let mut ymax = 0;
     input
         .lines()
@@ -34,23 +27,23 @@ fn make_cave(input: &str) -> (Cave, isize) {
     (cave, ymax)
 }
 
-fn add_rocks(cave: &mut Cave, (x1, y1): (isize, isize), (x2, y2): (isize, isize)) {
+fn add_rocks(cave: &mut HashSet<Coord>, (x1, y1): (isize, isize), (x2, y2): (isize, isize)) {
     match (x1.cmp(&x2), y1.cmp(&y2)) {
         (Ordering::Equal, _) => {
             for y in y1.min(y2)..=y1.max(y2) {
-                cave.insert((x1, y), Material::Rock);
+                cave.insert((x1, y));
             }
         }
         (_, std::cmp::Ordering::Equal) => {
             for x in x1.min(x2)..=x1.max(x2) {
-                cave.insert((x, y1), Material::Rock);
+                cave.insert((x, y1));
             }
         }
         _ => unreachable!(),
     }
 }
 
-fn drop_sand(cave: &mut Cave, (mut x, mut y): (isize, isize), ymax: isize) -> bool {
+fn drop_sand(cave: &mut HashSet<Coord>, (mut x, mut y): (isize, isize), ymax: isize) -> bool {
     match cave.get(&(x, y)) {
         Some(_) => false,
         None => loop {
@@ -72,7 +65,7 @@ fn drop_sand(cave: &mut Cave, (mut x, mut y): (isize, isize), ymax: isize) -> bo
                     y += 1
                 }
                 (Some(_), Some(_), Some(_)) => {
-                    cave.insert((x, y), Material::Sand);
+                    cave.insert((x, y));
                     return true;
                 }
             }
@@ -86,7 +79,7 @@ fn main() {
     let mut cave_2 = cave.clone();
 
     for x in 0..1000 {
-        cave_2.insert((x, ymax + 2), Material::Rock);
+        cave_2.insert((x, ymax + 2));
     }
 
     let mut i = 0;
