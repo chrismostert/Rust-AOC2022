@@ -1,8 +1,9 @@
-use std::{cmp::Ordering, collections::HashSet};
+use fxhash::FxHashSet;
+use std::cmp::Ordering;
 type Coord = (isize, isize);
 
-fn make_cave(input: &str) -> (HashSet<Coord>, isize) {
-    let mut cave = HashSet::new();
+fn make_cave(input: &str) -> (FxHashSet<Coord>, isize) {
+    let mut cave = FxHashSet::default();
     let mut ymax = 0;
     input
         .lines()
@@ -27,7 +28,7 @@ fn make_cave(input: &str) -> (HashSet<Coord>, isize) {
     (cave, ymax)
 }
 
-fn add_rocks(cave: &mut HashSet<Coord>, (x1, y1): (isize, isize), (x2, y2): (isize, isize)) {
+fn add_rocks(cave: &mut FxHashSet<Coord>, (x1, y1): (isize, isize), (x2, y2): (isize, isize)) {
     match (x1.cmp(&x2), y1.cmp(&y2)) {
         (Ordering::Equal, _) => {
             for y in y1.min(y2)..=y1.max(y2) {
@@ -43,28 +44,41 @@ fn add_rocks(cave: &mut HashSet<Coord>, (x1, y1): (isize, isize), (x2, y2): (isi
     }
 }
 
-fn drop_sand(cave: &mut HashSet<Coord>, (mut x, mut y): (isize, isize), ymax: isize) -> bool {
+fn drop_sand(
+    cave: &mut FxHashSet<Coord>,
+    (mut x, mut y): (isize, isize),
+    ymax: isize,
+    floor: bool,
+) -> bool {
+    let is_blocked = |coord: Coord| {
+        if coord.1 == ymax + 2 {
+            true
+        } else {
+            cave.get(&coord).is_some()
+        }
+    };
+
     match cave.get(&(x, y)) {
         Some(_) => false,
         None => loop {
-            if y == ymax {
+            if !floor && y == ymax {
                 return false;
             }
             match (
-                cave.get(&(x, y + 1)),
-                cave.get(&(x - 1, y + 1)),
-                cave.get(&(x + 1, y + 1)),
+                is_blocked((x, y + 1)),
+                is_blocked((x - 1, y + 1)),
+                is_blocked((x + 1, y + 1)),
             ) {
-                (None, _, _) => y += 1,
-                (_, None, _) => {
+                (false, _, _) => y += 1,
+                (_, false, _) => {
                     x -= 1;
                     y += 1
                 }
-                (_, _, None) => {
+                (_, _, false) => {
                     x += 1;
                     y += 1
                 }
-                (Some(_), Some(_), Some(_)) => {
+                (true, true, true) => {
                     cave.insert((x, y));
                     return true;
                 }
@@ -78,20 +92,16 @@ fn main() {
     let (mut cave, ymax) = make_cave(input);
     let mut cave_2 = cave.clone();
 
-    for x in 0..1000 {
-        cave_2.insert((x, ymax + 2));
+    let mut p1 = 0;
+    while drop_sand(&mut cave, (500, 0), ymax, false) {
+        p1 += 1;
     }
 
-    let mut i = 0;
-    while drop_sand(&mut cave, (500, 0), ymax) {
-        i += 1;
+    let mut p2 = 0;
+    while drop_sand(&mut cave_2, (500, 0), ymax, true) {
+        p2 += 1;
     }
 
-    let mut i_2 = 0;
-    while drop_sand(&mut cave_2, (500, 0), ymax + 100) {
-        i_2 += 1;
-    }
-
-    dbg!(i);
-    dbg!(i_2);
+    println!("Part 1: {}", p1);
+    println!("Part 2: {}", p2);
 }
